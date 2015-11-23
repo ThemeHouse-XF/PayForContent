@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="ThemeHouse_PayForContent" title="[⌂] Pay for Content" version_string="1.2.0" version_id="1447261019" url="http://xf.themehouse.io/" install_callback_class="ThemeHouse_Install" install_callback_method="install" uninstall_callback_class="ThemeHouse_Install" uninstall_callback_method="uninstall">
+  <admin_navigation>
+    <navigation navigation_id="createPaidContent" parent_navigation_id="paidContent" display_order="1" link="paid-content/add" admin_permission_id="paidContentItem" debug_only="0" hide_no_children="0"/>
+    <navigation navigation_id="paidContent" parent_navigation_id="users" display_order="65" link="paid-content" admin_permission_id="paidContentItem" debug_only="0" hide_no_children="0"/>
+  </admin_navigation>
+  <admin_permissions>
+    <admin_permission admin_permission_id="paidContentItem" display_order="3000"/>
+  </admin_permissions>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="th_paid_content_item_delete_payforcontent"><![CDATA[<xen:title>{xen:phrase th_confirm_deletion_of_paid_content_item_payforcontent}: {$paidContentItem.title}</xen:title>
+
+<xen:h1>{xen:phrase th_confirm_deletion_of_paid_content_item_payforcontent}</xen:h1>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:adminlink 'paid-content/edit', $paidContentItem}">{$paidContentItem.title}</xen:breadcrumb>
+</xen:navigation>
+
+<xen:require css="delete_confirmation.css" />
+
+<xen:form action="{xen:adminlink 'paid-content/delete', $paidContentItem}" class="deleteConfirmForm formOverlay">
+
+	<p>{xen:phrase th_please_confirm_want_to_delete_paid_content_item_payforcontent}:</p>
+	<strong><a href="{xen:adminlink 'paid-content/edit', $paidContentItem}">{$paidContentItem.title}</a></strong>
+
+	<xen:submitunit save="{xen:phrase th_delete_paid_content_payforcontent}" />
+
+	<input type="hidden" name="_xfConfirm" value="1" />
+</xen:form>]]></template>
+    <template title="th_paid_content_item_edit_payforcontent"><![CDATA[<xen:title>{xen:if '{$paidContentItem.paid_content_id}', '{xen:phrase th_edit_paid_content_payforcontent}: {xen:if {$paidContentItem.masterTitle}, {$paidContentItem.masterTitle}, {$paidContentItem.title}}', '{xen:phrase th_create_new_paid_content_payforcontent}'}</xen:title>
+
+<xen:if is="{$paidContentItem.paid_content_id}">
+	<xen:navigation>
+		<xen:breadcrumb href="{xen:adminlink 'paid-content'}#{xen:helper listitemid, $paidContentItem.paid_content_id}">{xen:if {$paidContentItem.masterTitle}, {$paidContentItem.masterTitle}, {$paidContentItem.title}}</xen:breadcrumb>
+	</xen:navigation>
+
+	<xen:h1>{xen:phrase th_edit_paid_content_payforcontent}: <em>{xen:if {$paidContentItem.masterTitle}, {$paidContentItem.masterTitle}, {$paidContentItem.title}}</em></xen:h1>
+</xen:if>
+
+<xen:form action="{xen:adminlink 'paid-content/save', $paidContentItem}"
+	class="AutoValidator"
+	data-fieldValidatorUrl="{xen:adminlink '/validate-field', $paidContentItem}"
+	data-redirect="on">
+
+	<xen:textboxunit label="{xen:phrase title}:" name="title" hint="{xen:phrase optional}" value="{$paidContentItem.masterTitle}" data-livetitletemplate="{xen:if {$paidContentItem.paid_content_id},
+		'{xen:phrase th_edit_paid_content_payforcontent}: <em>%s</em>',
+		'{xen:phrase th_create_new_paid_content_payforcontent}: <em>%s</em>'}" />
+			
+	<xen:selectunit label="{xen:phrase th_content_type_payforcontent}:" name="content_type" value="{$paidContentItem.content_type}">
+		<xen:option value="resource">{xen:phrase resource}</xen:option>
+	</xen:selectunit>
+	
+	<xen:textboxunit label="{xen:phrase th_content_id_payforcontent}:" name="content_id" value="{$paidContentItem.content_id}" size="5" />
+
+	<xen:controlunit label="{xen:phrase cost}:">
+		<xen:textbox name="cost_amount" value="{$paidContentItem.cost_amount}" size="5" />
+		<xen:select name="cost_currency" value="{$paidContentItem.cost_currency}" inputclass="autoSize">
+			<xen:option value="usd">USD</xen:option>
+			<xen:option value="cad">CAD</xen:option>
+			<xen:option value="aud">AUD</xen:option>
+			<xen:option value="gbp">GBP</xen:option>
+			<xen:option value="eur">EUR</xen:option>
+		</xen:select>
+	</xen:controlunit>
+
+	<xen:checkboxunit label="">
+		<xen:option name="purchase_limit_on" value="1" selected="({$paidContentItem.purchase_limit} == 0 && !{$paidContentItem.can_purchase}) OR {$paidContentItem.purchase_limit} > 0" label="{xen:phrase th_limit_number_of_purchases_to_payforcontent}:">
+			<xen:spinbox name="purchase_limit" value="{$paidContentItem.purchase_limit}" min="0" step="1" />
+		</xen:option>
+	</xen:checkboxunit>
+	
+	<xen:spinboxunit label="{xen:phrase th_priority_payforcontent}:" name="priority" value="{$paidContentItem.priority}" />
+	
+	<xen:checkboxunit label="">
+		<xen:option name="start_date_on" value="1" selected="{$paidContentItem.start_date}" label="{xen:phrase th_available_to_purchase_from_payforcontent}:">
+			<xen:textbox type="date" name="start_date" value="{$paidContentItem.startDate}" inputclass="autoSize" />
+		</xen:option>
+	</xen:checkboxunit>
+	
+	<xen:checkboxunit label="">
+		<xen:option name="end_date_on" value="1" selected="{$paidContentItem.end_date}" label="{xen:phrase th_available_to_purchase_until_payforcontent}:">
+			<xen:textbox type="date" name="end_date" value="{$paidContentItem.endDate}" inputclass="autoSize" />
+		</xen:option>
+	</xen:checkboxunit>
+	
+	<fieldset>
+		<xen:controlunit label="{xen:phrase th_allowed_user_groups_payforcontent}:">
+			<xen:radio name="user_group_type">
+				<xen:option value="all" selected="{$allUserGroups}">{xen:phrase all_user_groups}</xen:option>
+				<xen:option value="sel" selected="!{$allUserGroups}" label="{xen:phrase selected_user_groups}:">
+					<xen:disabled>
+						<xen:checkbox name="user_group_ids" listclass="checkboxColumns">
+							<xen:foreach loop="$userGroups" value="$userGroup">
+								<xen:option value="{$userGroup.user_group_id}" selected="in_array({$userGroup.user_group_id}, {$selUserGroupIds})">{$userGroup.title}</xen:option>
+							</xen:foreach>
+						</xen:checkbox>
+						<label class="muted"><input type="checkbox" checked="checked" class="CheckAll" data-target="#ctrl_user_group_type_sel_Disabler" /> <i>{xen:phrase select_all}</i></label>
+					</xen:disabled>
+				</xen:option>
+			</xen:radio>
+		</xen:controlunit>
+	</fieldset>
+
+	<xen:textboxunit label="{xen:phrase th_paypal_email_payforcontent}:" hint="{xen:phrase optional}" name="paypal_email" value="{$paidContentItem.paypal_email}" />
+	
+	<xen:submitunit>
+		<input type="submit" name="saveexit" value="{xen:phrase save_and_exit}" accesskey="e" class="button primary" id="saveExitButton" />
+		<input type="submit" name="reload" value="{xen:phrase save_changes}" accesskey="s" class="button" id="saveReloadButton" data-ajaxvalue="{xen:phrase save_all_changes}" />
+		<xen:if is="{$paidContentItem.paid_content_id}">
+			<input type="button" value="{xen:phrase th_delete_paid_content_payforcontent}..." accesskey="d" class="button OverlayTrigger"
+				data-href="{xen:adminlink paid-content/delete, $paidContentItem}" />
+		</xen:if>
+	</xen:submitunit>
+</xen:form>]]></template>
+    <template title="th_paid_content_item_list_payforcontent"><![CDATA[<xen:title>{xen:phrase th_paid_content_items_payforcontent}</xen:title>
+
+<xen:h1>{xen:phrase th_paid_content_items_payforcontent}</xen:h1>
+
+<xen:topctrl>
+	<a href="{xen:adminlink 'paid-content/add'}" class="button">+ {xen:phrase th_create_new_paid_content_payforcontent}</a>
+</xen:topctrl>
+
+<xen:require css="filter_list.css" />
+<xen:require js="js/xenforo/filter_list.js" />
+
+<xen:form action="{xen:adminlink 'paid-content/toggle'}" class="section AutoValidator">
+
+	<xen:if is="{$paidContentItems}">
+		<h2 class="subHeading">
+			<xen:include template="filter_list_controls" />
+			{xen:phrase th_paid_content_items_payforcontent}
+		</h2>
+
+		<ol class="FilterList">
+			<xen:foreach loop="$paidContentItems" key="$paidContentItemId" value="$paidContentItem">
+				<xen:listitem id="{$paidContentItemId}"
+					label="{xen:if $paidContentItem.masterTitle, {$paidContentItem.masterTitle}, {xen:raw $paidContentItem.content.title}}"
+					snippet="{$paidContentItem.content_type}"
+					href="{xen:adminlink 'paid-content/edit', $paidContentItem}"
+					delete="{xen:adminlink 'paid-content/delete', $paidContentItem}"
+					deletehint="{xen:phrase delete}">
+				</xen:listitem>
+			</xen:foreach>
+		</ol>
+
+		<p class="sectionFooter">{xen:phrase showing_x_of_y_items, 'count=<span class="FilterListCount">{xen:count $paidContentItems}</span>', 'total={xen:count $paidContentItems}'}</p>
+
+	<xen:else />
+		<div class="noResults">{xen:phrase th_there_is_no_paid_content_payforcontent}</div>
+	</xen:if>
+</xen:form>
+
+<xen:form action="{xen:adminlink 'options/save'}" class="AutoValidator OptIn">
+	<h3 class="subHeading">{xen:phrase payment_gateway_setup}</h3>
+
+	<xen:foreach loop="$renderedOptions" value="$renderedOption">
+		{xen:raw $renderedOption}
+	</xen:foreach>
+
+	<xen:submitunit save="{xen:phrase save}" />
+</xen:form>]]></template>
+  </admin_templates>
+  <admin_template_modifications/>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="controller_pre_dispatch" execute_order="10" callback_class="ThemeHouse_Listener_ControllerPreDispatch" callback_method="controllerPreDispatch" active="1" hint="" description=""/>
+    <listener event_id="file_health_check" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_FileHealthCheck" callback_method="fileHealthCheck" active="1" hint="" description=""/>
+    <listener event_id="init_dependencies" execute_order="10" callback_class="ThemeHouse_Listener_InitDependencies" callback_method="initDependencies" active="1" hint="" description=""/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassDataWriter" active="0" hint="XenResource_DataWriter_Resource" description="XenResource_DataWriter_Resource (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassModel" active="0" hint="XenResource_Model_Resource" description="XenResource_Model_Resource (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassController" active="0" hint="XenResource_ControllerPublic_Resource" description="XenResource_ControllerPublic_Resource (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassDataWriter" active="0" hint="XenForo_DataWriter_User" description="XenForo_DataWriter_User (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassModel" active="0" hint="XenResource_Model_Category" description="XenResource_Model_Category (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassHelper" active="0" hint="XenResource_ViewPublic_Helper_Resource" description="XenResource_ViewPublic_Helper_Resource (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassController" active="0" hint="XenForo_ControllerPublic_Register" description="XenForo_ControllerPublic_Register (For XenForo 1.2 and above)" compatibility_switch="1"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassController" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_datawriter" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassDataWriter" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_helper" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassHelper" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+    <listener event_id="load_class_model" execute_order="10" callback_class="ThemeHouse_PayForContent_Listener_LoadClass" callback_method="loadClassModel" active="1" hint="" description="(For XenForo 1.1 and below)" compatibility_switch="1"/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups>
+    <group group_id="th_payForContent" display_order="2000" debug_only="0"/>
+    <option option_id="th_payForContent_resourceFields" edit_format="callback" data_type="array" can_backup="1">
+      <default_value/>
+      <edit_format_params>ThemeHouse_PayForContent_Option_ResourceFields::renderOption</edit_format_params>
+      <sub_options>*</sub_options>
+      <relation group_id="th_payForContent" display_order="110"/>
+    </option>
+    <option option_id="th_payForContent_resourcePermissions" edit_format="callback" data_type="array" can_backup="1">
+      <default_value/>
+      <edit_format_params>ThemeHouse_PayForContent_Option_ResourcePermissions::renderOption</edit_format_params>
+      <sub_options>*</sub_options>
+      <relation group_id="th_payForContent" display_order="100"/>
+    </option>
+  </optiongroups>
+  <permissions>
+    <permission_groups/>
+    <permissions>
+      <permission permission_group_id="resource" permission_id="managePaidContent" permission_type="flag" default_value="unset" interface_group_id="resourceModeratorPermissions" display_order="100"/>
+    </permissions>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="admin_navigation_createPaidContent" version_id="1402394770" version_string="1.0.0"><![CDATA[Create Paid Content]]></phrase>
+    <phrase title="admin_navigation_paidContent" version_id="1402394770" version_string="1.0.0"><![CDATA[Paid Content]]></phrase>
+    <phrase title="admin_permission_paidContentItem" version_id="1402394770" version_string="1.0.0"><![CDATA[Manage paid content]]></phrase>
+    <phrase title="option_group_th_payForContent" version_id="1402657143" version_string="1.0.0"><![CDATA[Pay for Content by ThemeHouse]]></phrase>
+    <phrase title="option_group_th_payForContent_description" version_id="1402657143" version_string="1.0.0"><![CDATA[Options for the Pay for Content by ThemeHouse add-on.]]></phrase>
+    <phrase title="option_th_payForContent_resourceFields" version_id="1427812777" version_string="1.1.0"><![CDATA[Paid Resource Custom Fields]]></phrase>
+    <phrase title="option_th_payForContent_resourceFields_explain" version_id="1427812777" version_string="1.1.0"><![CDATA[These are the custom fields that will only be visible to users who have paid for a resource.]]></phrase>
+    <phrase title="option_th_payForContent_resourcePermissions" version_id="1402657143" version_string="1.0.0"><![CDATA[Paid Resource Additional Permissions]]></phrase>
+    <phrase title="option_th_payForContent_resourcePermissions_explain" version_id="1402657143" version_string="1.0.0"><![CDATA[These are the additional permissions that will be applied for any user who has paid for a resource, whenever they are viewing that resource.]]></phrase>
+    <phrase title="permission_resource_managePaidContent" version_id="1417446725" version_string="1.0.3"><![CDATA[Manage paid content]]></phrase>
+    <phrase title="th_allowed_user_groups_payforcontent" version_id="1409912108" version_string="1.0.1"><![CDATA[Allowed User Groups]]></phrase>
+    <phrase title="th_available_to_purchase_from_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Available to purchase from]]></phrase>
+    <phrase title="th_available_to_purchase_until_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Available to purchase until]]></phrase>
+    <phrase title="th_confirm_deletion_of_paid_content_item_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[Confirm Deletion of Paid Content]]></phrase>
+    <phrase title="th_content_id_payforcontent" version_id="1402409107" version_string="1.0.0"><![CDATA[Content ID]]></phrase>
+    <phrase title="th_content_type_payforcontent" version_id="1402409107" version_string="1.0.0"><![CDATA[Content Type]]></phrase>
+    <phrase title="th_create_new_paid_content_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[Create New Paid Content]]></phrase>
+    <phrase title="th_delete_paid_content_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[Delete Paid Content]]></phrase>
+    <phrase title="th_edit_paid_content_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[Edit Paid Content]]></phrase>
+    <phrase title="th_end_date_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[End Date]]></phrase>
+    <phrase title="th_limit_number_of_purchases_to_payforcontent" version_id="1402774222" version_string="1.0.0"><![CDATA[Limit number of purchases to]]></phrase>
+    <phrase title="th_manage_paid_content_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[Manage Paid Content]]></phrase>
+    <phrase title="th_paid_content_items_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[Paid Content]]></phrase>
+    <phrase title="th_paid_content_item_subtitle_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[Subtitle]]></phrase>
+    <phrase title="th_paid_content_item_title_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[Title]]></phrase>
+    <phrase title="th_paid_content_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[Paid Content]]></phrase>
+    <phrase title="th_paid_content_purchased_payforcontent" version_id="1402667438" version_string="1.0.0"><![CDATA[Paid Content Purchased]]></phrase>
+    <phrase title="th_paypal_email_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[PayPal Email]]></phrase>
+    <phrase title="th_please_confirm_want_to_delete_paid_content_item_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[Please confirm that you want to delete the following paid content]]></phrase>
+    <phrase title="th_please_enter_a_cost_no_less_than_zero_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Please enter a cost no less than zero.]]></phrase>
+    <phrase title="th_priority_payforcontent" version_id="1409912108" version_string="1.0.1"><![CDATA[Priority]]></phrase>
+    <phrase title="th_purchase_limit_not_available_for_free_content_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Purchase limiting is not available for free paid content.]]></phrase>
+    <phrase title="th_purchase_paid_content_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Purchase Paid Content]]></phrase>
+    <phrase title="th_requested_paid_content_item_not_found_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[The requested paid content could not be found.]]></phrase>
+    <phrase title="th_start_date_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Start Date]]></phrase>
+    <phrase title="th_sure_you_want_to_purchase_x_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[Are you sure you want to purchase {title}?]]></phrase>
+    <phrase title="th_thank_you_for_purchasing_this_paid_content_payforcontent" version_id="1402667438" version_string="1.0.0"><![CDATA[Thank you for purchasing this paid content.]]></phrase>
+    <phrase title="th_there_is_no_paid_content_payforcontent" version_id="1402394770" version_string="1.0.0"><![CDATA[There is no paid content.]]></phrase>
+    <phrase title="th_there_is_no_paid_content_to_manage_payforcontent" version_id="1427811787" version_string="1.1.0"><![CDATA[There is no paid content to manage.]]></phrase>
+    <phrase title="th_untitled_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[untitled]]></phrase>
+    <phrase title="th_when_payment_has_been_approved_payforcontent" version_id="1402667438" version_string="1.0.0"><![CDATA[When the payment has been approved, your account will be updated to reflect this.]]></phrase>
+    <phrase title="th_x_purchases_remaining_payforcontent" version_id="1402774222" version_string="1.0.0"><![CDATA[{limit} purchases remaining]]></phrase>
+    <phrase title="th_x_remaining_payforcontent" version_id="1417446725" version_string="1.0.3"><![CDATA[{count} remaining]]></phrase>
+  </phrases>
+  <route_prefixes>
+    <route_type type="admin">
+      <prefix original_prefix="paid-content" class="ThemeHouse_PayForContent_Route_PrefixAdmin_PaidContent" build_link="data_only"/>
+    </route_type>
+    <route_type type="public">
+      <prefix original_prefix="paid-content" class="ThemeHouse_PayForContent_Route_Prefix_PaidContent" build_link="data_only"/>
+    </route_type>
+  </route_prefixes>
+  <style_properties/>
+  <templates>
+    <template title="th_paid_content_item_edit_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[<xen:title>{xen:if '{$paidContentItem.paid_content_id}', '{xen:phrase th_edit_paid_content_payforcontent}: {xen:if {$paidContentItem.masterTitle}, {$paidContentItem.masterTitle}, {$paidContentItem.title}}', '{xen:phrase th_create_new_paid_content_payforcontent}'}</xen:title>
+
+<xen:if is="{$paidContentItem.paid_content_id}">
+	<xen:h1>{xen:phrase th_edit_paid_content_payforcontent}: <em>{xen:if {$paidContentItem.masterTitle}, {$paidContentItem.masterTitle}, {$paidContentItem.title}}</em></xen:h1>
+</xen:if>
+
+<xen:navigation>
+	<xen:breadcrumb source="$breadCrumbs" />
+	<xen:breadcrumb href="{xen:link 'full:paid-content', '', 'content_id={$paidContentItem.content_id}', 'content_type={$paidContentItem.content_type}'}">{xen:phrase th_paid_content_payforcontent}</xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'paid-content/save', $paidContentItem}"
+	class="xenForm formOverlay AutoValidator"
+	data-redirect="on" method="post">
+	
+	<dl class="ctrlUnit">
+		<dt><label for="ctrl_title">{xen:phrase title}:</label> <dfn>{xen:phrase optional}</dfn></dt>
+		<dd>
+			<input type="text" name="title" value="{$paidContentItem.masterTitle}" class="textCtrl" data-livetitletemplate="{xen:if {$paidContentItem.paid_content_id},
+		'{xen:phrase th_edit_paid_content_payforcontent}: <em>%s</em>',
+		'{xen:phrase th_create_new_paid_content_payforcontent}: <em>%s</em>'}" id="ctrl_title">
+		</dd>
+	</dl>
+	
+	<input type="hidden" name="content_type" value="{$paidContentItem.content_type}" />
+	<input type="hidden" name="content_id" value="{$paidContentItem.content_id}" />
+
+	<dl class="ctrlUnit">
+		<dt>Cost:</dt>
+		<dd>
+			<input type="text" name="cost_amount" value="{$paidContentItem.cost_amount}" size="5" class="textCtrl" id="ctrl_cost_amount">
+			<select name="cost_currency" class="textCtrl autoSize" id="ctrl_cost_currency">
+				<option value="usd"{xen:selected '{$paidContentItem.cost_currency} == "usd"'}>USD</option>
+				<option value="cad"{xen:selected '{$paidContentItem.cost_currency} == "cad"'}>CAD</option>
+				<option value="aud"{xen:selected '{$paidContentItem.cost_currency} == "aud"'}>AUD</option>
+				<option value="gbp"{xen:selected '{$paidContentItem.cost_currency} == "gbp"'}>GBP</option>
+				<option value="eur"{xen:selected '{$paidContentItem.cost_currency} == "eur"'}>EUR</option>
+			</select>
+		</dd>
+	</dl>
+		
+	<dl class="ctrlUnit">
+		<dt></dt>
+		<dd>
+			<ul>
+				<li>
+					<label for="ctrl_purchase_limit_on_1">
+						<input type="checkbox" name="purchase_limit_on" value="1" class="Disabler" id="ctrl_purchase_limit_on_1"
+							{xen:checked '({$paidContentItem.purchase_limit} == 0 && !{$paidContentItem.can_purchase}) OR {$paidContentItem.purchase_limit} > 0'} />
+							{xen:phrase th_limit_number_of_purchases_to_payforcontent}:
+					</label>
+					<ul id="ctrl_purchase_limit_on_1_Disabler">
+						<li><input type="number" name="purchase_limit" value="{$paidContentItem.purchase_limit}" step="1" min="0" class="textCtrl number SpinBox" id="ctrl_purchase_limit" /></li>
+					</ul>
+				</li>
+			</ul>
+		</dd>
+	</dl>
+
+	<dl class="ctrlUnit">
+		<dt><label for="ctrl_priority">{xen:phrase th_priority_payforcontent}:</label></dt>
+		<dd>
+			<input type="number" name="priority" value="{$paidContentItem.priority}" step="1" class="textCtrl number SpinBox" id="ctrl_priority" />
+		</dd>
+	</dl>
+	
+	<dl class="ctrlUnit">
+		<dt></dt>
+		<dd>
+			<ul>
+				<li>
+					<label for="ctrl_start_date_on_1">
+						<input type="checkbox" name="start_date_on" value="1" class="Disabler" id="ctrl_start_date_on_1" {xen:checked '{$paidContentItem.start_date}'} />
+							{xen:phrase th_available_to_purchase_from_payforcontent}:
+					</label>
+					<ul id="ctrl_start_date_on_1_Disabler">
+						<li><input type="date" name="start_date" value="{$paidContentItem.startDate}" class="textCtrl autoSize" id="ctrl_start_date" /></li>
+					</ul>
+				</li>
+			</ul>
+		</dd>
+	</dl>
+	
+	<dl class="ctrlUnit">
+		<dt></dt>
+		<dd>
+			<ul>
+				<li>
+					<label for="ctrl_end_date_on_1">
+						<input type="checkbox" name="end_date_on" value="1" class="Disabler" id="ctrl_end_date_on_1" {xen:checked '{$paidContentItem.end_date}'} />
+							{xen:phrase th_available_to_purchase_until_payforcontent}:
+					</label>
+					<ul id="ctrl_end_date_on_1_Disabler">
+						<li><input type="date" name="end_date" value="{$paidContentItem.endDate}" class="textCtrl autoSize" id="ctrl_end_date" /></li>
+					</ul>
+				</li>
+			</ul>
+		</dd>
+	</dl>
+		
+	<fieldset>
+		<dl class="ctrlUnit">
+			<dt>{xen:phrase th_allowed_user_groups_payforcontent}:</dt>
+			<dd>
+				<ul>
+					<li>
+						<label for="ctrl_user_group_type_all">
+							<input type="radio" name="user_group_type" value="all" id="ctrl_user_group_type_all"
+								{xen:checked '{$allUserGroups}'} />
+							{xen:phrase all_user_groups}
+						</label>
+					</li>
+					<li>
+						<label for="ctrl_user_group_type_sel">
+							<input type="radio" name="user_group_type" value="sel" class="Disabler" id="ctrl_user_group_type_sel"
+								{xen:checked '!{$allUserGroups}'} />
+							{xen:phrase selected_user_groups}:
+						</label>
+						<ul id="ctrl_user_group_type_sel_Disabler" class="disablerList disabled">
+							<li>
+								<ul class="checkboxColumns">
+								<xen:foreach loop="$userGroups" key="$userGroupId" value="$userGroup">
+									<li><label for="ctrl_user_group_ids_{$userGroupId}"><input type="checkbox" name="user_group_ids[]" value="{$userGroupId}" id="ctrl_user_group_ids_{$userGroupId}"{xen:checked 'in_array({$userGroupId}, {$selUserGroupIds})'}> {$userGroup.title}</label></li>
+								</xen:foreach>
+								</ul>
+								<label class="muted"><input type="checkbox" class="CheckAll" data-target="#ctrl_user_group_type_sel_Disabler"> <i>{xen:phrase select_all}</i></label>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</dd>
+		</dl>
+	</fieldset>
+	
+	<dl class="ctrlUnit">
+		<dt><label for="ctrl_paypal_email">{xen:phrase th_paypal_email_payforcontent}: <dfn>{xen:phrase optional}</dfn></label></dt>
+		<dd>
+			<input type="text" name="paypal_email" value="{$paidContentItem.paypal_email}" class="textCtrl" id="ctrl_paypal_email" />
+		</dd>
+	</dl>
+	
+	<dl class="ctrlUnit submitUnit">
+		<dt></dt>
+		<dd><input type="submit" value="{xen:if {$paidContentItem.paid_content_id}, {xen:phrase save_changes}, {xen:phrase th_create_new_paid_content_payforcontent}}" class="button primary" accesskey="s" /></dd>
+	</dl>
+
+	<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>]]></template>
+    <template title="th_paid_content_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[<xen:title>{xen:phrase th_paid_content_payforcontent}: {$title}</xen:title>
+<xen:h1>{xen:phrase th_paid_content_payforcontent}: <em>{$title}</em></xen:h1>
+
+<xen:topctrl>
+	<a href="{xen:link paid-content/add, '', 'content_id={$contentId}', 'content_type={$contentType}'}" class="callToAction"><span>{xen:phrase th_create_new_paid_content_payforcontent}</span></a>
+</xen:topctrl>
+
+<xen:navigation>
+	<xen:breadcrumb source="$breadCrumbs" />
+</xen:navigation>
+
+<xen:if is="{$paidContentItems}">
+	<table class="dataTable">
+		<tr class="dataRow">
+			<th>{xen:phrase title}</th>
+			<th>{xen:phrase cost}</th>
+			<th>{xen:phrase th_allowed_user_groups_payforcontent}</th>
+			<th>{xen:phrase th_start_date_payforcontent}</th>
+			<th>{xen:phrase th_end_date_payforcontent}</th>
+			<th style="text-align:right;">{xen:phrase th_priority_payforcontent}</th>
+		</tr>
+		
+		<xen:foreach loop="$paidContentItems" key="$paidContentId" value="$paidContentItem">
+			<tr class="dataRow">
+				<td><a href="{xen:link paid-content/edit, $paidContentItem}">{xen:if '{$paidContentItem.paid_content_title} != ""', {$paidContentItem.paid_content_title}, '({xen:phrase th_untitled_payforcontent})'}</a></td>
+				<td>{$paidContentItem.costPhrase} {xen:if '{$paidContentItem.purchase_limit} || !{$paidContentItem.can_purchase}', '({xen:phrase th_x_remaining_payforcontent, 'count={$paidContentItem.purchase_limit}'})'}</td>
+				<td>
+					<xen:if is="{$paidContentItem.user_group_ids} == -1">
+						{xen:phrase all_user_groups}
+					<xen:else />
+						<xen:foreach loop="$paidContentItem.userGroupIds" value="$userGroupId" i="$i">
+							{$userGroups.{$userGroupId}.title}{xen:if '{$i} != {xen:count {$paidContentItem.userGroupIds}}', ','}
+						</xen:foreach>
+					</xen:if>
+				</td>
+				<td>{xen:if $paidContentItem.start_date, {xen:date $paidContentItem.start_date}, {xen:phrase n_a}}</td>
+				<td>{xen:if $paidContentItem.end_date, {xen:date $paidContentItem.end_date}, {xen:phrase n_a}}</td>
+				<td style="text-align:right;">{$paidContentItem.priority}</td>
+			</tr>
+		</xen:foreach>
+	</table>
+<xen:else />
+	{xen:phrase th_there_is_no_paid_content_to_manage_payforcontent}
+</xen:if>]]></template>
+    <template title="th_purchase_button_payforcontent.css" version_id="1402503488" version_string="1.0.0"><![CDATA[.paidResourcePurchase
+{
+	float: right;
+	padding-top: 3px;
+}]]></template>
+    <template title="th_purchase_confirm_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[<xen:title>{xen:phrase th_purchase_paid_content_payforcontent}: {$title}</xen:title>
+
+<xen:navigation>
+	<xen:breadcrumb source="$breadCrumbs" />
+	<xen:breadcrumb href="{xen:link 'full:paid-content', '', 'content_id={$paidContentItem.content_id}', 'content_type={$paidContentItem.content_type}'}">{xen:phrase th_paid_content_payforcontent}</xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'paid-content/purchase', $paidContentItem}"
+	class="xenForm formOverlay" data-redirect="on" method="post">
+		<p>{xen:phrase th_sure_you_want_to_purchase_x_payforcontent, 'title={$title}'}</p>
+	
+	<dl class="ctrlUnit submitUnit">
+		<dt></dt>
+		<dd>
+			<input type="submit" value="{xen:phrase th_purchase_paid_content_payforcontent}" class="button primary" />
+		</dd>
+	</dl>
+
+	<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>]]></template>
+    <template title="th_resource_purchase_button_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[<xen:require css="th_purchase_button_payforcontent.css" />
+
+<xen:if is="{$resource.can_purchase} && {$resource.paid_content_id} && !{$resource.is_paid}">
+	<div class="paidResourcePurchase">
+		<a href="{xen:link paid-content/purchase, {$resource}, '_xfToken={$visitor.csrf_token_page}'}" class="button">{xen:phrase purchase}</a>
+	</div>
+</xen:if>]]></template>
+    <template title="th_resource_view_purchase_payforcontent" version_id="1427812777" version_string="1.1.0"><![CDATA[<li><label class="downloadButton purchase">
+	<a href="{xen:link paid-content/purchase, {$resource}, '_xfToken={$visitor.csrf_token_page}'}" class="inner">
+		{xen:phrase buy_now_for_x, 'cost={$resource.cost}'}
+		<xen:if is="{$resource.purchase_limit}">
+			<small class="minorText">{xen:phrase th_x_purchases_remaining_payforcontent, 'limit={$resource.purchase_limit}'}</small>
+		</xen:if>
+	</a>
+</label></li>
+
+<xen:if hascontent="true">
+	<div class="section">
+		<div class="secondaryContent">
+			<div class="pairsJustified">
+				<xen:contentcheck>
+					<xen:foreach loop="{$resource.paidContent}" key="{$paidContentId}" value="{$paidContentItem}">
+						<xen:if is="{$paidContentItem.paid_content_title} != '' && {$paidContentId} != {$resource.paid_content_id}">
+							<dl>
+								<dt>{$paidContentItem.paid_content_title}:</dt>
+								<dd>{$paidContentItem.costPhrase}</dd>
+							</dl>
+						</xen:if>
+					</xen:foreach>
+				</xen:contentcheck>
+			</div>
+		</div>
+	</div>
+</xen:if>]]></template>
+  </templates>
+  <public_template_modifications>
+    <modification template="footer" modification_key="th_copyrightNotice_payForContent" description="Copyright notice for [⌂] Pay for Content" execution_order="1" enabled="1" action="callback">
+      <find><![CDATA[/{xen:phrase (?:xenforo|extra)_copyright}/]]></find>
+      <replace><![CDATA[ThemeHouse_Listener_InitDependencies::copyrightNotice]]></replace>
+    </modification>
+    <modification template="register_form" modification_key="th_registerForm_payForContent" description="Adds paid_content_id field to register form." execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[#</form>#]]></find>
+      <replace><![CDATA[<input type="hidden" name="paid_content_id" value="{$paidContentId}" />
+${0}]]></replace>
+    </modification>
+    <modification template="resource_list_item" modification_key="th_resourceListItem_payForContent" description="Adds 'Purchase' button to paid resources." execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[#<div class="resourceDetails muted">#Us]]></find>
+      <replace><![CDATA[<xen:include template="th_resource_purchase_button_payforcontent" />
+${0}]]></replace>
+    </modification>
+    <modification template="resource_view_header" modification_key="th_resourceViewHeader_payForContent" description="Adds purchase link to resource view header." execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[#(<ul class="primaryLinks[^>]*>\s*<xen:contentcheck>\s*)<xen:if is="(.*)">#Us]]></find>
+      <replace><![CDATA[${1}
+<xen:if is="{$resource.can_purchase} && {$resource.paid_content_id} && !{$resource.is_paid}">
+<xen:include template="th_resource_view_purchase_payforcontent" />
+<xen:elseif is="${2}" />]]></replace>
+    </modification>
+    <modification template="resource_view" modification_key="th_resourceView_payForContent" description="Add 'Manage Paid Content' link to tools." execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[#(<xen:hook name="resource_controls".*)(</xen:hook>)#Us]]></find>
+      <replace><![CDATA[${1}
+<xen:if is="{$resource.canManagePaidContent}">
+	<li><a href="{xen:link paid-content, '', 'content_id={$resource.resource_id}', 'content_type=resource'}"><span>{xen:phrase th_manage_paid_content_payforcontent}</span></a></li>
+</xen:if>
+${2}]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
